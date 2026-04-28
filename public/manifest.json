@@ -1,0 +1,21 @@
+{
+  "name": "Carousel;IN",
+  "short_name": "CarouselIN",
+  "description": "Turn a LinkedIn post into a swipeable carousel that looks like a magazine",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#0a66c2",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
