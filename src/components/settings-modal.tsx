@@ -20,6 +20,8 @@ const ACCENT_PRESETS = [
 ];
 
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+const HERO_MAX_DIM = 2160;
+const HERO_JPEG_QUALITY = 0.85;
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -28,6 +30,39 @@ function readFileAsDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsDataURL(file);
   });
+}
+
+async function compressHeroImage(file: File): Promise<string> {
+  // SVG: vector, no need to canvas-resize.
+  if (file.type === "image/svg+xml") return readFileAsDataUrl(file);
+
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("Couldn't decode that image."));
+      img.src = sourceUrl;
+    });
+
+    const ratio = Math.min(1, HERO_MAX_DIM / Math.max(img.width, img.height));
+    const w = Math.round(img.width * ratio);
+    const h = Math.round(img.height * ratio);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas not available.");
+    ctx.drawImage(img, 0, 0, w, h);
+
+    // JPEG: hero images sit behind a dark gradient on the hook slide,
+    // so transparency loss is irrelevant and JPEG compresses photos far
+    // better than PNG for the same visual quality.
+    return canvas.toDataURL("image/jpeg", HERO_JPEG_QUALITY);
+  } finally {
+    URL.revokeObjectURL(sourceUrl);
+  }
 }
 
 interface SettingsModalProps {
@@ -70,7 +105,8 @@ export function SettingsModal({
 
   const handleImageUpload = async (
     file: File | undefined,
-    setter: (url: string | null) => void
+    setter: (url: string | null) => void,
+    kind: "logo" | "hero"
   ) => {
     setImageError(null);
     if (!file) return;
@@ -78,12 +114,15 @@ export function SettingsModal({
       setImageError("Use PNG, JPG, WebP, or SVG.");
       return;
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setImageError("File is too big. Try one under 2 MB.");
+    // Logo: keep as-is (transparency matters), enforce 2 MB cap.
+    // Hero: silently resize+recompress so the user can drop in any size.
+    if (kind === "logo" && file.size > MAX_IMAGE_BYTES) {
+      setImageError("Logo is too big. Try one under 2 MB.");
       return;
     }
     try {
-      const dataUrl = await readFileAsDataUrl(file);
+      const dataUrl =
+        kind === "hero" ? await compressHeroImage(file) : await readFileAsDataUrl(file);
       setter(dataUrl);
     } catch {
       setImageError("Couldn't read that file. Try a different one.");
@@ -331,7 +370,7 @@ export function SettingsModal({
                     ref={logoInputRef}
                     type="file"
                     accept={ALLOWED_IMAGE_TYPES.join(",")}
-                    onChange={(e) => handleImageUpload(e.target.files?.[0], setLogoDataUrl)}
+                    onChange={(e) => handleImageUpload(e.target.files?.[0], setLogoDataUrl, "logo")}
                     className="hidden"
                   />
                   <button
@@ -359,7 +398,7 @@ export function SettingsModal({
                   className="block text-xs font-medium mb-1.5"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Hook image (optional, becomes the background of slide 1)
+                  Hook image (optional, becomes the background of slide 1; auto-resized)
                 </label>
                 <div className="flex items-center gap-3">
                   {heroImageDataUrl ? (
@@ -385,7 +424,7 @@ export function SettingsModal({
                     ref={heroInputRef}
                     type="file"
                     accept={ALLOWED_IMAGE_TYPES.join(",")}
-                    onChange={(e) => handleImageUpload(e.target.files?.[0], setHeroImageDataUrl)}
+                    onChange={(e) => handleImageUpload(e.target.files?.[0], setHeroImageDataUrl, "hero")}
                     className="hidden"
                   />
                   <button
