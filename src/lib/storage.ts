@@ -9,9 +9,12 @@ const KEY = {
   lastSlides: "carouselin:lastSlides",
   leanAngle: "carouselin:leanAngle",
   sessionCost: "carouselin:sessionCost",
+  theme: "carouselin:theme",
 } as const;
 
 export const SCHEMA_VERSION = 1;
+
+export type Theme = "dark" | "light";
 
 export interface RegisteredIdentity {
   name: string;
@@ -83,6 +86,14 @@ export function writeApiKey(key: string): void {
 
 export function clearApiKey(): void {
   safeRemove(KEY.apiKey);
+}
+
+export function readTheme(): Theme {
+  return (safeGet(KEY.theme) as Theme | null) ?? "dark";
+}
+
+export function writeTheme(theme: Theme): void {
+  safeSet(KEY.theme, theme);
 }
 
 const DEFAULT_BRAND: Brand = {

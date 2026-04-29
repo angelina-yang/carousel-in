@@ -15,7 +15,7 @@ import { DEFAULT_ACCENT, type Brand, type LeanAngle } from "@/lib/types";
 export const maxDuration = 60;
 
 const MAX_GENERATIONS_PER_HOUR = 20;
-const MAX_POST_CHARS = 5000;
+const MAX_POST_CHARS = 3000;
 const MAX_BRAND_CHARS = 80;
 
 const MODEL_QUICK = "claude-haiku-4-5-20251001";

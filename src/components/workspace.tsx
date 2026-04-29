@@ -14,13 +14,16 @@ import {
   readLastSlides,
   readLeanAngle,
   readSessionCost,
+  readTheme,
   writeBrand,
   writeIdentity,
   writeLastPost,
   writeLastSlides,
   writeLeanAngle,
   writeSessionCost,
+  writeTheme,
   type RegisteredIdentity,
+  type Theme,
 } from "@/lib/storage";
 import { DEFAULT_ACCENT, type Brand, type LeanAngle, type Slide } from "@/lib/types";
 
@@ -32,7 +35,7 @@ const ANGLES: { id: LeanAngle; label: string }[] = [
   { id: "contrarian", label: "Contrarian" },
 ];
 
-const MAX_POST_CHARS = 5000;
+const MAX_POST_CHARS = 3000;
 
 export function Workspace() {
   const [identity, setIdentity] = useState<RegisteredIdentity | null | undefined>(
@@ -55,6 +58,7 @@ export function Workspace() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sessionCost, setSessionCost] = useState(0);
   const [lastCost, setLastCost] = useState<number | null>(null);
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
     setIdentity(readIdentity());
@@ -65,7 +69,19 @@ export function Workspace() {
     const savedSlides = readLastSlides();
     if (savedSlides) setSlides(savedSlides);
     setSessionCost(readSessionCost());
+    const savedTheme = readTheme();
+    setTheme(savedTheme);
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    document.documentElement.classList.toggle("light", savedTheme === "light");
   }, []);
+
+  const handleToggleTheme = () => {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    writeTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    document.documentElement.classList.toggle("light", next === "light");
+  };
 
   const handleRegistered = (name: string, email: string) => {
     const record: RegisteredIdentity = {
@@ -153,7 +169,9 @@ export function Workspace() {
         <div className="flex flex-col gap-6">
           <AppHeader
             hasApiKey={Boolean(apiKey)}
+            theme={theme}
             onOpenSettings={() => setSettingsOpen(true)}
+            onToggleTheme={handleToggleTheme}
           />
 
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -192,7 +210,9 @@ export function Workspace() {
                   ? `${50 - post.length} more chars to enable Generate`
                   : "Ready to generate"}
               </span>
-              <span>{post.length}</span>
+              <span>
+                {post.length} / {MAX_POST_CHARS}
+              </span>
             </div>
           </section>
 
