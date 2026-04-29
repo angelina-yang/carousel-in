@@ -14,6 +14,7 @@ import {
   readLastSlides,
   readLeanAngle,
   readSessionCost,
+  writeBrand,
   writeIdentity,
   writeLastPost,
   writeLastSlides,
@@ -127,6 +128,13 @@ export function Workspace() {
         setSessionCost(next);
         writeSessionCost(next);
         setLastCost(data.usage.estimatedCostUsd);
+      }
+      // Hook image is per-carousel: clear after a successful generation so
+      // the next carousel doesn't auto-inherit it. Logo/byline/color stay.
+      if (brand.heroImageDataUrl) {
+        const cleared = { ...brand, heroImageDataUrl: null };
+        setBrand(cleared);
+        writeBrand(cleared);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Draft failed");
