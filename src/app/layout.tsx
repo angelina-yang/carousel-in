@@ -32,6 +32,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`h-full antialiased dark ${fraunces.variable} ${inter.variable}`}
+      suppressHydrationWarning
     >
       <head>
         <script

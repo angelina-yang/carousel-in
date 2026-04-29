@@ -5,7 +5,7 @@ import { WelcomeModal } from "./welcome-modal";
 import { SettingsModal } from "./settings-modal";
 import { SlideGallery } from "./slide-gallery";
 import { AppHeader } from "./app-header";
-import { SupportLinks } from "./support-links";
+import { Footer } from "./footer";
 import {
   readApiKey,
   readBrand,
@@ -283,19 +283,7 @@ export function Workspace() {
             </section>
           )}
 
-          <footer
-            className="flex flex-wrap items-center justify-between gap-3 text-xs pt-4"
-            style={{
-              borderTop: "1px solid var(--border-primary)",
-              color: "var(--text-faint)",
-            }}
-          >
-            <span>
-              Session: ${sessionCost.toFixed(4)}
-              {lastCost !== null ? ` · last $${lastCost.toFixed(4)}` : ""}
-            </span>
-            <SupportLinks appName="Carousel;IN" />
-          </footer>
+          <Footer sessionCost={sessionCost} lastCost={lastCost} />
 
           <SettingsModal
             isOpen={settingsOpen}
