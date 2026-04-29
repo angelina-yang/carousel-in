@@ -49,8 +49,11 @@ export function AppHeader({ hasApiKey, onOpenSettings }: Props) {
           href="https://buymeacoffee.com/angelinayang"
           target="_blank"
           rel="noopener noreferrer"
-          className="p-1.5 rounded-lg transition-colors hover:text-yellow-400"
-          style={{ color: "var(--text-muted)" }}
+          className="p-2 rounded-lg transition-colors hover:text-yellow-400"
+          style={{
+            color: "var(--text-secondary)",
+            border: "1px solid var(--border-secondary)",
+          }}
           title="Buy me a coffee"
           aria-label="Buy me a coffee"
         >
@@ -61,8 +64,11 @@ export function AppHeader({ hasApiKey, onOpenSettings }: Props) {
         <button
           type="button"
           onClick={onOpenSettings}
-          className="p-1.5 rounded-lg transition-colors"
-          style={{ color: hasApiKey ? "var(--text-muted)" : undefined }}
+          className="p-2 rounded-lg transition-colors hover:opacity-80"
+          style={{
+            color: hasApiKey ? "var(--text-secondary)" : undefined,
+            border: "1px solid var(--border-secondary)",
+          }}
           title={hasApiKey ? "Settings" : "Add your Anthropic API key to get started"}
           aria-label="Settings"
         >

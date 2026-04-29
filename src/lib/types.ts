@@ -22,6 +22,14 @@ export interface Slide {
 export interface Brand {
   displayName: string;
   handle: string;
+  url: string;
+  accentColor: string;
+  logoDataUrl: string | null;
+  heroImageDataUrl: string | null;
 }
+
+export const DEFAULT_ACCENT = "#b794f6";
+
+export const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB pre-encode
 
 export type LeanAngle = "decide" | "tension" | "framework" | "story" | "contrarian";

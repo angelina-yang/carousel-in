@@ -1,4 +1,4 @@
-import type { Brand, LeanAngle, Slide } from "./types";
+import { DEFAULT_ACCENT, type Brand, type LeanAngle, type Slide } from "./types";
 
 const KEY = {
   schemaVersion: "carouselin:schemaVersion",
@@ -88,10 +88,32 @@ export function clearApiKey(): void {
 const DEFAULT_BRAND: Brand = {
   displayName: "",
   handle: "",
+  url: "",
+  accentColor: DEFAULT_ACCENT,
+  logoDataUrl: null,
+  heroImageDataUrl: null,
 };
 
 export function readBrand(): Brand {
-  return readJSON<Brand>(KEY.brand) ?? DEFAULT_BRAND;
+  const stored = readJSON<Partial<Brand>>(KEY.brand);
+  if (!stored) return DEFAULT_BRAND;
+  return {
+    displayName: typeof stored.displayName === "string" ? stored.displayName : "",
+    handle: typeof stored.handle === "string" ? stored.handle : "",
+    url: typeof stored.url === "string" ? stored.url : "",
+    accentColor:
+      typeof stored.accentColor === "string" && /^#[0-9a-f]{6}$/i.test(stored.accentColor)
+        ? stored.accentColor
+        : DEFAULT_ACCENT,
+    logoDataUrl:
+      typeof stored.logoDataUrl === "string" && stored.logoDataUrl.startsWith("data:image/")
+        ? stored.logoDataUrl
+        : null,
+    heroImageDataUrl:
+      typeof stored.heroImageDataUrl === "string" && stored.heroImageDataUrl.startsWith("data:image/")
+        ? stored.heroImageDataUrl
+        : null,
+  };
 }
 
 export function writeBrand(brand: Brand): void {

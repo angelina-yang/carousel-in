@@ -5,7 +5,6 @@ export const SLIDE_WIDTH = 1080;
 export const SLIDE_HEIGHT = 1350;
 
 const BG = "#0d0918";
-const ACCENT = "#b794f6";
 const TEXT = "#ffffff";
 const MUTED = "rgba(255,255,255,0.55)";
 const HAIRLINE = "rgba(255,255,255,0.18)";
@@ -22,7 +21,17 @@ interface SlideProps {
   brand: Brand;
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return `rgba(183,148,246,${alpha})`;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
 export function EditorialDarkSlide({ slide, index, total, brand }: SlideProps) {
+  const accent = brand.accentColor || "#b794f6";
+  const isHookWithImage = slide.role === "hook" && Boolean(brand.heroImageDataUrl);
+
   const containerStyle: React.CSSProperties = {
     width: SLIDE_WIDTH,
     height: SLIDE_HEIGHT,
@@ -36,7 +45,10 @@ export function EditorialDarkSlide({ slide, index, total, brand }: SlideProps) {
 
   return (
     <div style={containerStyle}>
-      <BrandBar brand={brand} />
+      {isHookWithImage && (
+        <HeroImageLayer src={brand.heroImageDataUrl as string} />
+      )}
+      <BrandBar brand={brand} accent={accent} />
       <div
         style={{
           position: "absolute",
@@ -44,32 +56,85 @@ export function EditorialDarkSlide({ slide, index, total, brand }: SlideProps) {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
+          zIndex: 2,
         }}
       >
-        <SlideContent slide={slide} brand={brand} />
+        <SlideContent slide={slide} brand={brand} accent={accent} />
       </div>
       <FooterBar index={index} total={total} brand={brand} role={slide.role} />
-      <Glow />
+      {!isHookWithImage && <Glow accent={accent} />}
+      {brand.logoDataUrl && <LogoCorner src={brand.logoDataUrl} />}
     </div>
   );
 }
 
-function Glow() {
+function HeroImageLayer({ src }: { src: string }) {
+  return (
+    <>
+      <img
+        src={src}
+        alt=""
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          zIndex: 0,
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(180deg, rgba(13,9,24,0.55) 0%, rgba(13,9,24,0.78) 55%, rgba(13,9,24,0.95) 100%)",
+          zIndex: 1,
+        }}
+      />
+    </>
+  );
+}
+
+function LogoCorner({ src }: { src: string }) {
+  return (
+    <img
+      src={src}
+      alt=""
+      aria-hidden
+      style={{
+        position: "absolute",
+        top: 70,
+        right: 90,
+        height: 56,
+        width: "auto",
+        maxWidth: 200,
+        objectFit: "contain",
+        zIndex: 3,
+        opacity: 0.9,
+      }}
+    />
+  );
+}
+
+function Glow({ accent }: { accent: string }) {
   return (
     <div
       aria-hidden
       style={{
         position: "absolute",
         inset: 0,
-        background:
-          "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(183,148,246,0.18), transparent 65%)",
+        background: `radial-gradient(ellipse 80% 60% at 50% 30%, ${hexToRgba(accent, 0.18)}, transparent 65%)`,
         pointerEvents: "none",
+        zIndex: 1,
       }}
     />
   );
 }
 
-function BrandBar({ brand }: { brand: Brand }) {
+function BrandBar({ brand, accent }: { brand: Brand; accent: string }) {
   const text =
     brand.handle ||
     brand.displayName ||
@@ -84,9 +149,10 @@ function BrandBar({ brand }: { brand: Brand }) {
         fontSize: 18,
         letterSpacing: "0.22em",
         textTransform: "uppercase",
-        color: ACCENT,
+        color: accent,
         fontWeight: 600,
         fontFamily: SANS,
+        zIndex: 3,
       }}
     >
       {text}
@@ -117,6 +183,7 @@ function FooterBar({
         alignItems: "center",
         justifyContent: "space-between",
         fontFamily: SANS,
+        zIndex: 3,
       }}
     >
       <div
@@ -148,7 +215,15 @@ function HairlineRule() {
   );
 }
 
-function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
+function SlideContent({
+  slide,
+  brand,
+  accent,
+}: {
+  slide: Slide;
+  brand: Brand;
+  accent: string;
+}) {
   const headlineStyle: React.CSSProperties = {
     fontFamily: SERIF,
     fontWeight: 700,
@@ -176,7 +251,7 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
               text: slide.headline,
               accentWords: slide.accentWords,
               strikethroughWords: slide.strikethroughWords,
-              accentColor: ACCENT,
+              accentColor: accent,
             })}
           </div>
           {slide.body && (
@@ -193,7 +268,7 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
               text: slide.headline,
               accentWords: slide.accentWords,
               strikethroughWords: slide.strikethroughWords,
-              accentColor: ACCENT,
+              accentColor: accent,
             })}
           </div>
           {slide.body && (
@@ -209,7 +284,7 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
             style={{
               ...headlineStyle,
               fontSize: 220,
-              color: ACCENT,
+              color: accent,
               fontWeight: 600,
               lineHeight: 1,
             }}
@@ -279,7 +354,7 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
               text: slide.headline,
               accentWords: slide.accentWords,
               strikethroughWords: slide.strikethroughWords,
-              accentColor: ACCENT,
+              accentColor: accent,
             })}
           </div>
           <ol
@@ -305,7 +380,7 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
                   style={{
                     fontFamily:
                       'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
-                    color: ACCENT,
+                    color: accent,
                     fontSize: 28,
                     fontWeight: 500,
                     minWidth: 56,
@@ -339,7 +414,7 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
               fontSize: 18,
               letterSpacing: "0.22em",
               textTransform: "uppercase",
-              color: ACCENT,
+              color: accent,
               fontWeight: 600,
               marginBottom: 28,
             }}
@@ -351,7 +426,7 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
               text: slide.headline,
               accentWords: slide.accentWords,
               strikethroughWords: slide.strikethroughWords,
-              accentColor: ACCENT,
+              accentColor: accent,
             })}
           </div>
           {slide.body && (
@@ -370,7 +445,7 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
               text: slide.headline,
               accentWords: slide.accentWords,
               strikethroughWords: slide.strikethroughWords,
-              accentColor: ACCENT,
+              accentColor: accent,
             })}
           </div>
           {slide.body && (
@@ -381,9 +456,9 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
               marginTop: 48,
               display: "inline-block",
               padding: "20px 36px",
-              border: `2px solid ${ACCENT}`,
+              border: `2px solid ${accent}`,
               borderRadius: 999,
-              color: ACCENT,
+              color: accent,
               fontFamily: SANS,
               fontWeight: 600,
               fontSize: 22,
@@ -393,6 +468,20 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
           >
             {slide.footnote || "Save · Share"}
           </div>
+          {brand.url && (
+            <div
+              style={{
+                marginTop: 36,
+                fontFamily: SANS,
+                fontSize: 22,
+                color: TEXT,
+                fontWeight: 500,
+                letterSpacing: "0.02em",
+              }}
+            >
+              {brand.url}
+            </div>
+          )}
         </div>
       );
     }
@@ -427,11 +516,24 @@ function SlideContent({ slide, brand }: { slide: Slide; brand: Brand }) {
           >
             {handle}
           </div>
+          {brand.url && (
+            <div
+              style={{
+                fontFamily: SANS,
+                fontSize: 20,
+                color: TEXT,
+                marginTop: 14,
+                fontWeight: 500,
+              }}
+            >
+              {brand.url}
+            </div>
+          )}
           <div
             style={{
               fontFamily: SANS,
               fontSize: 20,
-              color: ACCENT,
+              color: accent,
               fontWeight: 600,
               letterSpacing: "0.12em",
               textTransform: "uppercase",

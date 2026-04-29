@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   clearApiKey,
   readApiKey,
@@ -8,7 +8,27 @@ import {
   writeApiKey,
   writeBrand,
 } from "@/lib/storage";
-import type { Brand } from "@/lib/types";
+import { DEFAULT_ACCENT, MAX_IMAGE_BYTES, type Brand } from "@/lib/types";
+
+const ACCENT_PRESETS = [
+  { name: "Lavender", value: "#b794f6" },
+  { name: "Sky", value: "#60a5fa" },
+  { name: "Mint", value: "#34d399" },
+  { name: "Amber", value: "#fbbf24" },
+  { name: "Coral", value: "#f87171" },
+  { name: "Magenta", value: "#e879f9" },
+];
+
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -26,7 +46,14 @@ export function SettingsModal({
   const [apiKey, setApiKey] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [handle, setHandle] = useState("");
+  const [url, setUrl] = useState("");
+  const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
+  const [heroImageDataUrl, setHeroImageDataUrl] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -34,7 +61,34 @@ export function SettingsModal({
     const brand = readBrand();
     setDisplayName(brand.displayName);
     setHandle(brand.handle);
+    setUrl(brand.url);
+    setAccentColor(brand.accentColor);
+    setLogoDataUrl(brand.logoDataUrl);
+    setHeroImageDataUrl(brand.heroImageDataUrl);
+    setImageError(null);
   }, [isOpen]);
+
+  const handleImageUpload = async (
+    file: File | undefined,
+    setter: (url: string | null) => void
+  ) => {
+    setImageError(null);
+    if (!file) return;
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setImageError("Use PNG, JPG, WebP, or SVG.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setImageError("File is too big. Try one under 2 MB.");
+      return;
+    }
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setter(dataUrl);
+    } catch {
+      setImageError("Couldn't read that file. Try a different one.");
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -54,6 +108,10 @@ export function SettingsModal({
     const nextBrand: Brand = {
       displayName: displayName.trim().slice(0, 80),
       handle: handle.trim().slice(0, 80),
+      url: url.trim().slice(0, 200),
+      accentColor: /^#[0-9a-f]{6}$/i.test(accentColor) ? accentColor : DEFAULT_ACCENT,
+      logoDataUrl,
+      heroImageDataUrl,
     };
     writeBrand(nextBrand);
     onBrandChange(nextBrand);
@@ -155,7 +213,7 @@ export function SettingsModal({
 
           <div className="pt-2 border-t" style={{ borderColor: "var(--border-primary)" }}>
             <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-              Brand byline shown on the outro slide.
+              Brand details shown on the carousel.
             </p>
             <div className="space-y-3">
               <div>
@@ -189,6 +247,171 @@ export function SettingsModal({
                   className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1"
                   style={inputStyle}
                 />
+              </div>
+              <div>
+                <label
+                  className="block text-xs font-medium mb-1"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Your URL or handle (printed on the CTA slide)
+                </label>
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="twosetai.com  ·  linkedin.com/in/angelinayang"
+                  className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label
+                  className="block text-xs font-medium mb-1.5"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Accent color
+                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  {ACCENT_PRESETS.map((p) => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => setAccentColor(p.value)}
+                      className="w-7 h-7 rounded-full transition-transform hover:scale-110"
+                      style={{
+                        background: p.value,
+                        outline:
+                          accentColor.toLowerCase() === p.value.toLowerCase()
+                            ? "2px solid white"
+                            : "2px solid transparent",
+                        outlineOffset: 2,
+                      }}
+                      aria-label={p.name}
+                      title={p.name}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    className="w-9 h-9 rounded cursor-pointer"
+                    style={{ background: "transparent", border: "1px solid var(--border-secondary)" }}
+                    title="Custom color"
+                  />
+                </div>
+              </div>
+              <div>
+                <label
+                  className="block text-xs font-medium mb-1.5"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Logo (optional, shown in slide corner)
+                </label>
+                <div className="flex items-center gap-3">
+                  {logoDataUrl ? (
+                    <img
+                      src={logoDataUrl}
+                      alt=""
+                      className="w-12 h-12 rounded object-contain"
+                      style={{ background: "var(--bg-input)", border: "1px solid var(--border-secondary)" }}
+                    />
+                  ) : (
+                    <div
+                      className="w-12 h-12 rounded flex items-center justify-center text-xs"
+                      style={{
+                        background: "var(--bg-input)",
+                        border: "1px dashed var(--border-secondary)",
+                        color: "var(--text-faint)",
+                      }}
+                    >
+                      none
+                    </div>
+                  )}
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept={ALLOWED_IMAGE_TYPES.join(",")}
+                    onChange={(e) => handleImageUpload(e.target.files?.[0], setLogoDataUrl)}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                    className="text-xs px-3 py-1.5 rounded"
+                    style={{ border: "1px solid var(--border-secondary)", color: "var(--text-secondary)" }}
+                  >
+                    Upload
+                  </button>
+                  {logoDataUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLogoDataUrl(null)}
+                      className="text-xs"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label
+                  className="block text-xs font-medium mb-1.5"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Hook image (optional, becomes the background of slide 1)
+                </label>
+                <div className="flex items-center gap-3">
+                  {heroImageDataUrl ? (
+                    <img
+                      src={heroImageDataUrl}
+                      alt=""
+                      className="w-16 h-12 rounded object-cover"
+                      style={{ background: "var(--bg-input)", border: "1px solid var(--border-secondary)" }}
+                    />
+                  ) : (
+                    <div
+                      className="w-16 h-12 rounded flex items-center justify-center text-xs"
+                      style={{
+                        background: "var(--bg-input)",
+                        border: "1px dashed var(--border-secondary)",
+                        color: "var(--text-faint)",
+                      }}
+                    >
+                      none
+                    </div>
+                  )}
+                  <input
+                    ref={heroInputRef}
+                    type="file"
+                    accept={ALLOWED_IMAGE_TYPES.join(",")}
+                    onChange={(e) => handleImageUpload(e.target.files?.[0], setHeroImageDataUrl)}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => heroInputRef.current?.click()}
+                    className="text-xs px-3 py-1.5 rounded"
+                    style={{ border: "1px solid var(--border-secondary)", color: "var(--text-secondary)" }}
+                  >
+                    Upload
+                  </button>
+                  {heroImageDataUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setHeroImageDataUrl(null)}
+                      className="text-xs"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {imageError && (
+                  <p className="text-xs mt-1.5" style={{ color: "#ef4444" }}>
+                    {imageError}
+                  </p>
+                )}
               </div>
             </div>
           </div>

@@ -21,7 +21,7 @@ import {
   writeSessionCost,
   type RegisteredIdentity,
 } from "@/lib/storage";
-import type { Brand, LeanAngle, Slide } from "@/lib/types";
+import { DEFAULT_ACCENT, type Brand, type LeanAngle, type Slide } from "@/lib/types";
 
 const ANGLES: { id: LeanAngle; label: string }[] = [
   { id: "decide", label: "Decide for me" },
@@ -38,7 +38,14 @@ export function Workspace() {
     undefined
   );
   const [apiKey, setApiKey] = useState<string | null>(null);
-  const [brand, setBrand] = useState<Brand>({ displayName: "", handle: "" });
+  const [brand, setBrand] = useState<Brand>({
+    displayName: "",
+    handle: "",
+    url: "",
+    accentColor: DEFAULT_ACCENT,
+    logoDataUrl: null,
+    heroImageDataUrl: null,
+  });
   const [post, setPost] = useState("");
   const [angle, setAngle] = useState<LeanAngle>("decide");
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -100,7 +107,7 @@ export function Workspace() {
         },
         body: JSON.stringify({
           post: post.trim(),
-          brand,
+          brand: { displayName: brand.displayName, handle: brand.handle },
           angle,
           model: "polished",
         }),

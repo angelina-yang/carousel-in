@@ -10,7 +10,7 @@ import {
   parseSlideResponse,
 } from "@/lib/prompts";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
-import type { Brand, LeanAngle } from "@/lib/types";
+import { DEFAULT_ACCENT, type Brand, type LeanAngle } from "@/lib/types";
 
 export const maxDuration = 60;
 
@@ -35,9 +35,21 @@ const VALID_ANGLES: LeanAngle[] = [
 ];
 
 function parseBrand(raw: unknown): Brand {
-  if (!raw || typeof raw !== "object") return { displayName: "", handle: "" };
+  // The breakdown prompt only uses displayName + handle. Other brand fields
+  // (logo, hero image, accent color) are client-only and never sent to Claude,
+  // but the Brand type requires them — fill with defaults.
+  const empty: Brand = {
+    displayName: "",
+    handle: "",
+    url: "",
+    accentColor: DEFAULT_ACCENT,
+    logoDataUrl: null,
+    heroImageDataUrl: null,
+  };
+  if (!raw || typeof raw !== "object") return empty;
   const rec = raw as { displayName?: unknown; handle?: unknown };
   return {
+    ...empty,
     displayName:
       typeof rec.displayName === "string"
         ? rec.displayName.slice(0, MAX_BRAND_CHARS).trim()
