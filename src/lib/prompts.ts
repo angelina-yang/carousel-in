@@ -57,7 +57,7 @@ SLIDE ROLES (pick the best for each slide):
 - "hook" — first slide, the attention grabber. Headline 30-90 chars. Pick 1-3 accentWords from the headline. Optionally pick 1-2 strikethroughWords from the headline (struck through visually) when there's a contradiction or "wrong assumption" moment.
 - "setup" — establishes why this matters. Short.
 - "body" — develops one point. Headline + optional supporting body text.
-- "body-stat" — a number-led slide. Headline is the number or short phrase. Body is the caption.
+- "body-stat" — a number-led slide. Headline MUST be the stat itself only (max 12 characters, e.g. "8,300+", "73%", "$1.2M", "10x", "3 days"). Put the explanation/caption in body, not headline. If you can't compress to ~12 chars, use "body" role instead.
 - "body-quote" — pull-quote. Headline is the quote (in quotes). Footnote is attribution.
 - "list" — 3-5 numbered items. Use the listItems array. Headline is the list title.
 - "takeaway" — the synthesis / point. Bold and clear.

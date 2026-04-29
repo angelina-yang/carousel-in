@@ -278,12 +278,16 @@ function SlideContent({
       );
     }
     case "body-stat": {
+      // Defensive sizing: prompt asks for ~12 chars, but if Claude returns
+      // a longer phrase, scale down so it doesn't overflow the slide.
+      const len = slide.headline.length;
+      const statFontSize = len <= 8 ? 220 : len <= 14 ? 160 : len <= 24 ? 110 : 84;
       return (
         <div>
           <div
             style={{
               ...headlineStyle,
-              fontSize: 220,
+              fontSize: statFontSize,
               color: accent,
               fontWeight: 600,
               lineHeight: 1,
