@@ -50,6 +50,7 @@ export function EditorialDarkSlide({ slide, index, total, brand }: SlideProps) {
       )}
       <BrandBar brand={brand} accent={accent} />
       <div
+        data-fit-box="true"
         style={{
           position: "absolute",
           inset: "180px 90px 160px 90px",
@@ -59,7 +60,9 @@ export function EditorialDarkSlide({ slide, index, total, brand }: SlideProps) {
           zIndex: 2,
         }}
       >
-        <SlideContent slide={slide} brand={brand} accent={accent} />
+        <div data-fit-content="true">
+          <SlideContent slide={slide} brand={brand} accent={accent} />
+        </div>
       </div>
       <FooterBar index={index} total={total} brand={brand} role={slide.role} />
       {!isHookWithImage && <Glow accent={accent} />}

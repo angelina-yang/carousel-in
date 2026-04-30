@@ -19,6 +19,34 @@ const PREVIEW_WIDTH = 360;
 const PREVIEW_SCALE = PREVIEW_WIDTH / SLIDE_WIDTH;
 const PREVIEW_HEIGHT = SLIDE_HEIGHT * PREVIEW_SCALE;
 
+const FIT_SCALES = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7];
+
+function fitSlideToBox(slideEl: HTMLDivElement): void {
+  const fitBox = slideEl.querySelector<HTMLDivElement>('[data-fit-box="true"]');
+  const fitContent = slideEl.querySelector<HTMLDivElement>(
+    '[data-fit-content="true"]',
+  );
+  if (!fitBox || !fitContent) return;
+
+  const originals = new Map<HTMLElement, number>();
+  fitContent.querySelectorAll<HTMLElement>("*").forEach((el) => {
+    const fs = el.style.fontSize;
+    if (!fs) return;
+    const num = parseFloat(fs);
+    if (Number.isFinite(num)) originals.set(el, num);
+  });
+  if (originals.size === 0) return;
+
+  for (const scale of FIT_SCALES) {
+    originals.forEach((origPx, el) => {
+      el.style.fontSize = `${origPx * scale}px`;
+    });
+    const fitsHeight = fitContent.offsetHeight <= fitBox.clientHeight;
+    const fitsWidth = fitContent.scrollWidth <= fitBox.clientWidth;
+    if (fitsHeight && fitsWidth) return;
+  }
+}
+
 export function SlideGallery({ slides, brand }: SlideGalleryProps) {
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [exporting, setExporting] = useState(false);
@@ -32,6 +60,7 @@ export function SlideGallery({ slides, brand }: SlideGalleryProps) {
       const pngs: string[] = [];
       for (const el of slideRefs.current) {
         if (!el) continue;
+        fitSlideToBox(el);
         const dataUrl = await toPng(el, {
           width: SLIDE_WIDTH,
           height: SLIDE_HEIGHT,
