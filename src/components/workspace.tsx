@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WelcomeModal } from "./welcome-modal";
 import { SettingsModal } from "./settings-modal";
 import { SlideGallery } from "./slide-gallery";
@@ -62,13 +62,57 @@ export function Workspace() {
   const [verificationKey, setVerificationKey] = useState<string | null>(null);
   const [generationPost, setGenerationPost] = useState("");
   const [generationAngle, setGenerationAngle] = useState<LeanAngle>("decide");
+  // Handoff state — used when another Lab tool (e.g. TL;IN) sends us a post via
+  // URL params and asks us to auto-generate. Held until welcome modal + API key
+  // are both resolved, then fires once.
+  const [pendingAutorun, setPendingAutorun] = useState(false);
+  const autorunFiredRef = useRef(false);
 
   useEffect(() => {
     setIdentity(readIdentity());
     setApiKey(readApiKey());
     setBrand(readBrand());
-    setPost(readLastPost());
-    setAngle(readLeanAngle());
+
+    // URL handoff (e.g. from TL;IN). If query params are present, they win
+    // over localStorage so the user lands on exactly the post they sent.
+    let urlPost: string | null = null;
+    let urlAngle: LeanAngle | null = null;
+    let urlAutorun = false;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const rawPost = params.get("post");
+      const rawAngle = params.get("angle");
+      const rawAutorun = params.get("autorun");
+      if (rawPost) urlPost = rawPost.slice(0, MAX_POST_CHARS);
+      if (
+        rawAngle &&
+        ANGLES.some((a) => a.id === rawAngle)
+      ) {
+        urlAngle = rawAngle as LeanAngle;
+      }
+      if (rawAutorun === "1" || rawAutorun === "true") urlAutorun = true;
+      if (urlPost || urlAngle || urlAutorun) {
+        // Clean the URL so a refresh doesn't re-trigger autorun.
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+
+    if (urlPost) {
+      setPost(urlPost);
+      writeLastPost(urlPost);
+    } else {
+      setPost(readLastPost());
+    }
+
+    if (urlAngle) {
+      setAngle(urlAngle);
+      writeLeanAngle(urlAngle);
+    } else {
+      setAngle(readLeanAngle());
+    }
+
+    if (urlAutorun) setPendingAutorun(true);
+
     const savedSlides = readLastSlides();
     if (savedSlides) setSlides(savedSlides);
     setSessionCost(readSessionCost());
@@ -167,6 +211,29 @@ export function Workspace() {
       setGenerating(false);
     }
   };
+
+  // Fire a queued autorun (set by URL handoff) once all preconditions are met:
+  // identity loaded + non-null, API key present, post long enough, not already
+  // generating. If the API key is missing, open settings and keep the request
+  // queued so we fire as soon as the user saves a key.
+  useEffect(() => {
+    if (!pendingAutorun || autorunFiredRef.current) return;
+    if (identity === undefined || identity === null) return;
+    if (!apiKey) {
+      setSettingsOpen(true);
+      return;
+    }
+    if (post.trim().length < 50) {
+      // The handoff post was too short or got cleared. Drop the request.
+      setPendingAutorun(false);
+      return;
+    }
+    if (generating) return;
+    autorunFiredRef.current = true;
+    setPendingAutorun(false);
+    void handleGenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAutorun, identity, apiKey, post, generating]);
 
   if (identity === undefined) return null;
 
