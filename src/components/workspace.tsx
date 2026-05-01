@@ -59,6 +59,9 @@ export function Workspace() {
   const [sessionCost, setSessionCost] = useState(0);
   const [lastCost, setLastCost] = useState<number | null>(null);
   const [theme, setTheme] = useState<Theme>("dark");
+  const [verificationKey, setVerificationKey] = useState<string | null>(null);
+  const [generationPost, setGenerationPost] = useState("");
+  const [generationAngle, setGenerationAngle] = useState<LeanAngle>("decide");
 
   useEffect(() => {
     setIdentity(readIdentity());
@@ -139,6 +142,12 @@ export function Workspace() {
       }
       setSlides(data.slides);
       writeLastSlides(data.slides);
+      // Snapshot the post + angle that produced these slides so the QA pass
+      // can ground its regens in the same source material the user submitted.
+      setGenerationPost(post.trim());
+      setGenerationAngle(angle);
+      // Trigger one verification pass for this fresh batch.
+      setVerificationKey(`gen-${Date.now()}`);
       if (data.usage?.estimatedCostUsd) {
         const next = sessionCost + data.usage.estimatedCostUsd;
         setSessionCost(next);
@@ -279,7 +288,29 @@ export function Workspace() {
 
           {slides.length > 0 && (
             <section className="pt-4">
-              <SlideGallery slides={slides} brand={brand} />
+              <SlideGallery
+                slides={slides}
+                brand={brand}
+                apiKey={apiKey}
+                post={generationPost || post.trim()}
+                angle={generationAngle}
+                verificationKey={verificationKey}
+                onSlidesUpdate={(next) => {
+                  setSlides(next);
+                  writeLastSlides(next);
+                }}
+                onCostUpdate={(delta) => {
+                  setSessionCost((prev) => {
+                    const updated = prev + delta;
+                    writeSessionCost(updated);
+                    return updated;
+                  });
+                  setLastCost((prev) => (prev ?? 0) + delta);
+                }}
+                onVerificationDone={() => {
+                  setVerificationKey(null);
+                }}
+              />
             </section>
           )}
 
