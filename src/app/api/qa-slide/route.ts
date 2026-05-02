@@ -1,8 +1,14 @@
 // POST /api/qa-slide
-// Visual layout QA on a rendered slide PNG. Haiku 4.5 with vision.
+// Visual layout QA on a rendered slide PNG. Sonnet 4.6 with vision.
 // Input:  { imageDataUrl, slide, slideIndex, totalSlides }
 // Header: x-claude-api-key
 // Output: { pass, reason, usage }
+//
+// Model history: started on Haiku 4.5 (2026-05-01) for cost. Bumped to Sonnet
+// 4.6 same day after Haiku missed a CTA pill-wrap layout bug that the prompt
+// explicitly checks for. Sonnet's vision is meaningfully better at
+// fine-grained UI judgments and the cost delta is rounding error on a BYOK
+// key (~$0.005 → ~$0.015 per slide).
 
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
@@ -11,9 +17,9 @@ import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 export const maxDuration = 60;
 
 const MAX_QA_PER_HOUR = 200;
-const MODEL_QA = "claude-haiku-4-5-20251001";
-const COST_INPUT_PER_MTOK = 1.0;
-const COST_OUTPUT_PER_MTOK = 5.0;
+const MODEL_QA = "claude-sonnet-4-6";
+const COST_INPUT_PER_MTOK = 3.0;
+const COST_OUTPUT_PER_MTOK = 15.0;
 
 const SYSTEM_PROMPT = `You are a layout QA reviewer for LinkedIn carousel slides. You judge a single rendered slide image and decide whether it's clean enough to post or has a visible layout problem.
 
