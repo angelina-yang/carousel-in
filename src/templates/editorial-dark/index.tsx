@@ -472,6 +472,11 @@ function SlideContent({
               fontSize: 22,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
+              // Force single line so the pill border never wraps and slices
+              // through the button text. If the text is genuinely too wide
+              // for the slide, the auto-fit pass will catch it via the
+              // scrollWidth <= clientWidth check and shrink fontSize.
+              whiteSpace: "nowrap",
             }}
           >
             {slide.footnote || "Save · Share"}
