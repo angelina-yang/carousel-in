@@ -62,7 +62,7 @@ SLIDE ROLES (pick the best for each slide):
 - "list" — 3-5 numbered items. Use the listItems array. Headline is the list title.
 - "takeaway" — the synthesis / point. Bold and clear.
 - "cta" — action prompt. "Save this", "Share with a founder", "Try [tool]", etc. No external URLs.
-- "outro" — last slide. Headline = brand byline + "Follow for more". No body.
+- "outro" — last slide. If a brand byline is set below, headline incorporates it (e.g. "Angelina Yang · TwoSetAI — Follow for more on AI"). If the byline is "not set", write a generic close like "Thanks for reading — follow for more" — never invent a name, handle, or company. No body.
 
 OUTPUT FORMAT
 Return a single JSON object, nothing else. No prose, no markdown fences, no commentary. Schema:
@@ -86,7 +86,7 @@ RULES
 - For non-list slides, listItems MUST be [].
 - For list slides, listItems has 3-5 entries; body can be null.
 - Slide 1 is always role "hook". Last slide is always role "outro". CTA, when present, is the second-to-last slide.
-- The outro headline should incorporate the brand byline. The byline below.
+- The outro headline should incorporate the brand byline if it is set; if the byline below says "not set", write a brand-neutral close instead (never substitute a placeholder name).
 - Never invent facts not in the post. If the post is light on detail, lean on the framing the user already wrote.
 - Do not include hashtags, emoji-only lines, or external URLs.
 

@@ -138,10 +138,11 @@ function Glow({ accent }: { accent: string }) {
 }
 
 function BrandBar({ brand, accent }: { brand: Brand; accent: string }) {
-  const text =
-    brand.handle ||
-    brand.displayName ||
-    "TWOSETAI · HEROES BEHIND AI";
+  // Only render the top brand bar if the user has set a byline. No personal
+  // fallback — the bar disappears for users who haven't filled in settings,
+  // rather than stamping someone else's brand on their slides.
+  const text = brand.handle || brand.displayName || "";
+  if (!text) return null;
   return (
     <div
       style={{
@@ -493,36 +494,43 @@ function SlideContent({
       );
     }
     case "outro": {
-      const display = brand.displayName || "TwoSetAI";
-      const handle = brand.handle || "Heroes Behind AI";
+      // No personal fallback — show only what the user actually set in their
+      // brand settings. If they set neither, the outro is just the headline +
+      // url + "Follow for more" with no byline lines.
+      const display = brand.displayName || "";
+      const handle = brand.handle || "";
       return (
         <div>
           <div style={{ ...headlineStyle, fontSize: 72, fontWeight: 600 }}>
             {slide.headline}
           </div>
           <HairlineRule />
-          <div
-            style={{
-              fontFamily: SERIF,
-              fontStyle: "italic",
-              fontSize: 36,
-              color: TEXT,
-              marginTop: 12,
-            }}
-          >
-            {display}
-          </div>
-          <div
-            style={{
-              fontFamily: SANS,
-              fontSize: 22,
-              color: MUTED,
-              marginTop: 8,
-              letterSpacing: "0.04em",
-            }}
-          >
-            {handle}
-          </div>
+          {display && (
+            <div
+              style={{
+                fontFamily: SERIF,
+                fontStyle: "italic",
+                fontSize: 36,
+                color: TEXT,
+                marginTop: 12,
+              }}
+            >
+              {display}
+            </div>
+          )}
+          {handle && (
+            <div
+              style={{
+                fontFamily: SANS,
+                fontSize: 22,
+                color: MUTED,
+                marginTop: 8,
+                letterSpacing: "0.04em",
+              }}
+            >
+              {handle}
+            </div>
+          )}
           {brand.url && (
             <div
               style={{
