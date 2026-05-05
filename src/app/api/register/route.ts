@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email,
-            first_url: "https://carousel.heroesbehind.ai",
+            first_url: "https://carousel.twosetai.com",
             first_referrer: "carousel-in",
           }),
         });
