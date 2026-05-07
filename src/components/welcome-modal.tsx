@@ -157,13 +157,13 @@ export function WelcomeModal({ isOpen, onComplete }: WelcomeModalProps) {
               >
                 TwoSetAI Lab Terms of Use
               </a>
-              . This is a free, BYOK tool -- I bring my own API keys and pay my own usage costs.
+              . This is a free, experimental tool.
             </p>
           </div>
 
           <p className="text-xs leading-relaxed" style={{ color: "var(--text-faint)" }}>
-            <span className="font-medium" style={{ color: "var(--text-secondary)" }}>🔑 Your keys, your data.</span>{" "}
-            Everything stays with you, never on our server.
+            <span className="font-medium" style={{ color: "var(--text-secondary)" }}>Your keys, your data.</span>{" "}
+            Carousels and brand details stay in your browser, never on our server.
           </p>
 
           <button

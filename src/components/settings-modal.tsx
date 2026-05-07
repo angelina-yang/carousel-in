@@ -87,12 +87,16 @@ export function SettingsModal({
   const [heroImageDataUrl, setHeroImageDataUrl] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  // Required financial-responsibility consent. Pre-acknowledge if user is
+  // editing a key they already saved (they consented previously).
+  const [acknowledged, setAcknowledged] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    setApiKey(readApiKey() ?? "");
+    const existing = readApiKey() ?? "";
+    setApiKey(existing);
     const brand = readBrand();
     setDisplayName(brand.displayName);
     setHandle(brand.handle);
@@ -101,6 +105,7 @@ export function SettingsModal({
     setLogoDataUrl(brand.logoDataUrl);
     setHeroImageDataUrl(brand.heroImageDataUrl);
     setImageError(null);
+    setAcknowledged(existing.trim() !== "");
   }, [isOpen]);
 
   const handleImageUpload = async (
@@ -137,6 +142,8 @@ export function SettingsModal({
     (trimmedKey.startsWith("sk-ant-") && trimmedKey.length > 20);
 
   const handleSave = () => {
+    // Require financial-responsibility consent before persisting a key.
+    if (trimmedKey.length > 0 && !acknowledged) return;
     if (trimmedKey.length === 0) {
       clearApiKey();
       onApiKeyChange(null);
@@ -201,6 +208,33 @@ export function SettingsModal({
             >
               Anthropic API key
             </label>
+
+            {/* Spending-cap recommendation banner — shown above the input
+                so users see it before pasting. */}
+            <div
+              className="rounded-lg px-3 py-2.5 mb-3 text-xs leading-relaxed"
+              style={{
+                background: "rgba(234, 179, 8, 0.12)",
+                border: "1px solid rgba(234, 179, 8, 0.3)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              <strong style={{ color: "var(--text-primary)" }}>
+                Set a hard spending cap first.
+              </strong>{" "}
+              Carousel;IN does not enforce, monitor, or limit your provider
+              charges. Set a monthly cap in your{" "}
+              <a
+                href="https://console.anthropic.com/settings/limits"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--accent)" }}
+              >
+                Anthropic dashboard
+              </a>{" "}
+              before pasting your key.
+            </div>
+
             <div className="flex gap-2">
               <input
                 type={showKey ? "text" : "password"}
@@ -231,7 +265,7 @@ export function SettingsModal({
               className="text-xs mt-1.5 leading-relaxed"
               style={{ color: "var(--text-faint)" }}
             >
-              Stored only in your browser. Get one at{" "}
+              Saved on this device only, inside your browser. Get one at{" "}
               <a
                 href="https://console.anthropic.com/settings/keys"
                 target="_blank"
@@ -247,6 +281,30 @@ export function SettingsModal({
                 Anthropic keys start with sk-ant- and are longer than 20
                 characters.
               </p>
+            )}
+
+            {/* Required financial-responsibility consent — checkbox must
+                be ticked before Save activates. Click-time clickwrap. */}
+            {trimmedKey.length > 0 && (
+              <label
+                className="flex items-start gap-2.5 mt-3 cursor-pointer"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={acknowledged}
+                  onChange={(e) => setAcknowledged(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded shrink-0"
+                  style={{ accentColor: "var(--accent)" }}
+                />
+                <span className="text-xs leading-relaxed">
+                  I understand that I am solely responsible for all charges
+                  incurred at my chosen API provider through Carousel;IN, and
+                  that TwoSetAI cannot see, pause, refund, or limit those
+                  charges. I have set a hard spending cap in my provider
+                  account, or I accept full responsibility if I have not.
+                </span>
+              </label>
             )}
           </div>
 
@@ -458,7 +516,7 @@ export function SettingsModal({
           <button
             type="button"
             onClick={handleSave}
-            disabled={!keyLooksValid}
+            disabled={!keyLooksValid || (trimmedKey.length > 0 && !acknowledged)}
             className="w-full py-2.5 text-white font-medium rounded-lg disabled:opacity-40"
             style={{ background: "var(--accent)" }}
           >

@@ -332,6 +332,7 @@ export function Workspace() {
             disabled={!apiKey ? false : !canGenerate}
             className="rounded-lg px-4 py-3 text-sm font-semibold text-white disabled:opacity-40"
             style={{ background: "var(--accent)" }}
+            title="Charged directly to your Anthropic account. We do not see or control this charge."
           >
             {generating
               ? "Drafting carousel..."
