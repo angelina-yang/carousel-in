@@ -356,7 +356,7 @@ export function SettingsModal({
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="twosetai.com  ·  linkedin.com/in/angelinayang"
+                  placeholder="twosetai.com  ·  linkedin.com/in/hey-angelina"
                   className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1"
                   style={inputStyle}
                 />
